@@ -7,7 +7,11 @@ module AbsGram where
 
 
 
-newtype Ident = Ident String deriving (Eq, Ord, Show, Read)
+newtype Ident = Ident String deriving (Eq, Ord, Read)
+
+instance Show Ident where
+  show (Ident x) = show x
+
 data Program = Program [Stmt]
   deriving (Eq, Ord, Show, Read)
 

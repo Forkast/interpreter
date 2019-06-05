@@ -7,25 +7,20 @@ import ParGram
 import AbsGram
 import ErrM
 import Control.Monad.State
+import Control.Monad.Except
+import Data.Map as Map
 
-import SkelGram
+import MyGram
 
 main :: IO ()
 main = do
-    args <- getArgs
-    file <- openFile (head args) ReadMode
-    input <- hGetContents file
-    case (pProgram (myLexer input)) of
-         (Ok tree) -> do
-             stan <- execStateT (transProgram tree) []
-             putStrLn $ "liz mi jaja: " ++ show stan
-         (Bad why) -> putStrLn why
-
-{-
-stan zamiast errora.
-uzupełnić te instrukcje tak zeby wypisalo mam stworzyc funkcje taka...
-1. odpalenie calego programu. transProgram. lista definicji fukncji.
-dla kazdej funkcji na liscie odpali transFunDef po kolei. ktore powinno wykonac reszte. ze stora wyciagnac maina i go wykonac.
-2. moge dodac store'a ktory dla kazdej funckji zapisze ja w postaci nazwa -> parametry
-3. moze byc wygodnie zmodyfikowac fundefy na statmenty
--}
+  args <- getArgs
+  file <- openFile (head args) ReadMode
+  input <- hGetContents file
+  case (pProgram (myLexer input)) of
+    (Ok tree) -> do
+      error <- runExceptT (execStateT (transProgram tree) (fromList []))
+      case error of
+        (Left msg) -> putStrLn $ "liz mi jaja: " ++ msg
+        (Right state) -> putStrLn "Program zakonczony sukcesem."
+    (Bad why) -> putStrLn why

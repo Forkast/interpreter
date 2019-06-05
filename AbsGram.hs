@@ -7,12 +7,11 @@ module AbsGram where
 
 
 
-newtype Ident = Ident String deriving (Eq, Ord, Read)
-
-instance Show Ident where
-  show (Ident x) = show x
-
+newtype Ident = Ident String deriving (Eq, Ord, Show, Read)
 data Program = Program [Stmt]
+  deriving (Eq, Ord, Show, Read)
+
+data Arg = Arg Type Ident
   deriving (Eq, Ord, Show, Read)
 
 data Block = Block [Stmt]
@@ -31,6 +30,7 @@ data Stmt
     | CondElse Expr Stmt Stmt
     | While Expr Stmt
     | Debug
+    | FnDef Type Ident [Arg] Block
     | SExp Expr
   deriving (Eq, Ord, Show, Read)
 
@@ -46,7 +46,7 @@ data Expr
     | ELitInt Integer
     | ELitTrue
     | ELitFalse
-    | EApp Ident [Expr]
+    | EApp Expr [Expr]
     | EString String
     | Neg Expr
     | Not Expr

@@ -4,10 +4,6 @@ entrypoints Program ;
 
 Program.   Program ::= [Stmt] ;
 
-FnDef.     FunDef ::= Type Ident "(" [Arg] ")" Block ;
-
-separator nonempty TopDef "" ;
-
 Arg.       Arg ::= Type Ident;
 
 separator  Arg "," ;
@@ -48,6 +44,8 @@ While.     Stmt ::= "while" "(" Expr ")" Stmt ;
 
 Debug.     Stmt ::= "debug" ";" ;
 
+FnDef.     Stmt ::= Type Ident "(" [Arg] ")" Block ;
+
 SExp.      Stmt ::= Expr  ";" ;
 
 -- Types ---------------------------------------------------
@@ -78,7 +76,7 @@ ELitTrue.  Expr6 ::= "true" ;
 
 ELitFalse. Expr6 ::= "false" ;
 
-EApp.      Expr6 ::= Ident "(" [Expr] ")" ;
+EApp.      Expr6 ::= Expr6 "(" [Expr] ")" ;
 
 EString.   Expr6 ::= String ;
 

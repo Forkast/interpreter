@@ -12,7 +12,9 @@ import Data.IORef
 
 import AbsGram
 import ErrM
-type Result a = StateT (Map Ident (IORef Value)) (ExceptT String IO) a
+
+type DataEnv = Map Ident (IORef Value)
+type Result a = StateT DataEnv (ExceptT String IO) a
 
 failure :: Show a => a -> Result ()
 failure x = do
@@ -32,14 +34,17 @@ Block stmts -> failure x-}
 transStmts :: [Stmt] -> Result ()
 transStmts = mapM_ transStmt
 
-declItem :: Type -> Item -> Result ()
-declItem _ (NoInit i) = do -- TODO: domyslna wartosc
-  el <- liftIO (newIORef (MyInt 0))
-  modify $ \env -> Map.insert i (el) env
-declItem _ (Init i e) = do
-  v <- transExpr e
+declVal :: Ident -> Value -> Result ()
+declVal i v = do
   el <- liftIO (newIORef v)
   modify $ \env -> Map.insert i (el) env
+
+declItem :: Type -> Item -> Result ()
+declItem t (NoInit i) = do -- TODO: domyslna wartosc
+  declVal i (MyInt 0)
+declItem _ (Init i e) = do
+  v <- transExpr e
+  declVal i v
 
 condRunStmt :: Value -> Stmt -> Result ()
 condRunStmt exp stmt1 = condElseRunStmt exp stmt1 Empty
@@ -60,6 +65,18 @@ block res = do
   co <- res
   put old
   return co
+
+newFunction :: DataEnv -> [Ident] -> Block -> Result Value
+newFunction env argsIden blk = return $ MyFunction $ \argsVal -> do
+  currentState <- get
+  put env
+  zipWithM_ declVal argsIden argsVal
+  transStmt (BStmt blk)
+  put currentState
+  return (MyInt 0)
+
+argGetIdent :: Arg -> Result Ident
+argGetIdent (Arg t i) = return i
 
 transStmt :: Stmt -> Result ()
 transStmt x = case x of
@@ -86,7 +103,16 @@ transStmt x = case x of
     liftIO $ putStrLn "uwaga teraz debuguje"
     state <- get
     liftIO $ mapM readIORef state >>= print
-  SExp expr -> failure x
+  FnDef type_ ident args blk -> do
+    argIdents <- mapM argGetIdent args
+    ref <- liftIO $ newIORef (MyInt 0)
+    modify $ \env -> Map.insert ident ref env
+    env <- get
+    fun <- newFunction env argIdents blk
+    liftIO $ writeIORef ref fun
+  SExp expr -> do
+    transExpr expr
+    return ()
 
 {-
 transItem :: Item -> Result
@@ -109,6 +135,7 @@ data Value = MyInt Int
            | MyStr String
            | MyBool Bool
            | MyFunction Fun
+           | MyLambda Type [Type] Block
 
 data Operator = MyAdd (Value -> Value -> Value)
               | MyMul (Value -> Value -> Value)
@@ -118,6 +145,7 @@ instance Show Value where
   show (MyInt x) = show x
   show (MyStr x) = x
   show (MyBool x) = show x
+  show (MyFunction x) = show "funkcja"
 
 myAdd :: Value -> Value -> Value
 myAdd (MyInt x) (MyInt y) = MyInt (x + y)
@@ -191,13 +219,17 @@ transExpr x = case x of
   ELitInt integer -> return $ MyInt $ fromInteger integer
   ELitTrue -> return $ MyBool True
   ELitFalse -> return $ MyBool False
---   EApp ident exprs -> failure x
+  EApp ident exprs -> do
+    MyFunction f <- transExpr ident
+    args <- mapM transExpr exprs
+    f args
   EString string -> return $ MyStr string
 --   Neg expr -> failure x
 --   Not expr -> failure x
 --   EAnd expr1 expr2 -> failure x
 --   EOr expr1 expr2 -> failure x
 -- transExpr (EAdd (ELitInt x) addop exp1) = transExpr 
+    
 
 transAddOp :: AddOp -> Result Operator
 transAddOp x = case x of

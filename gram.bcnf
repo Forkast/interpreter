@@ -2,7 +2,11 @@
 
 entrypoints Program ;
 
-Program.   Program ::= [Stmt] ;
+Program.   Program ::= [FunDef] ;
+
+FnDef.     FunDef ::= Type Ident "(" [Arg] ")" Block ;
+
+separator nonempty FunDef "" ;
 
 Arg.       Arg ::= Type Ident;
 
@@ -13,6 +17,8 @@ separator  Arg "," ;
 Block.     Block ::= "{" [Stmt] "}" ;
 
 separator  Stmt "" ;
+
+FDef.      Stmt ::= FunDef ;
 
 Empty.     Stmt ::= ";" ;
 
@@ -43,8 +49,6 @@ CondElse.  Stmt ::= "if" "(" Expr ")" Stmt "else" Stmt  ;
 While.     Stmt ::= "while" "(" Expr ")" Stmt ;
 
 Debug.     Stmt ::= "debug" ";" ;
-
-FnDef.     Stmt ::= Type Ident "(" [Arg] ")" Block ;
 
 SExp.      Stmt ::= Expr  ";" ;
 

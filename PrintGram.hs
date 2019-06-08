@@ -85,8 +85,13 @@ instance Print Ident where
 
 instance Print Program where
   prt i e = case e of
-    Program stmts -> prPrec i 0 (concatD [prt 0 stmts])
+    Program fundefs -> prPrec i 0 (concatD [prt 0 fundefs])
 
+instance Print FunDef where
+  prt i e = case e of
+    FnDef type_ id args block -> prPrec i 0 (concatD [prt 0 type_, prt 0 id, doc (showString "("), prt 0 args, doc (showString ")"), prt 0 block])
+  prtList _ [x] = (concatD [prt 0 x])
+  prtList _ (x:xs) = (concatD [prt 0 x, prt 0 xs])
 instance Print Arg where
   prt i e = case e of
     Arg type_ id -> prPrec i 0 (concatD [prt 0 type_, prt 0 id])
@@ -99,6 +104,7 @@ instance Print Block where
 
 instance Print Stmt where
   prt i e = case e of
+    FDef fundef -> prPrec i 0 (concatD [prt 0 fundef])
     Empty -> prPrec i 0 (concatD [doc (showString ";")])
     BStmt block -> prPrec i 0 (concatD [prt 0 block])
     Decl type_ items -> prPrec i 0 (concatD [prt 0 type_, prt 0 items, doc (showString ";")])
@@ -111,7 +117,6 @@ instance Print Stmt where
     CondElse expr stmt1 stmt2 -> prPrec i 0 (concatD [doc (showString "if"), doc (showString "("), prt 0 expr, doc (showString ")"), prt 0 stmt1, doc (showString "else"), prt 0 stmt2])
     While expr stmt -> prPrec i 0 (concatD [doc (showString "while"), doc (showString "("), prt 0 expr, doc (showString ")"), prt 0 stmt])
     Debug -> prPrec i 0 (concatD [doc (showString "debug"), doc (showString ";")])
-    FnDef type_ id args block -> prPrec i 0 (concatD [prt 0 type_, prt 0 id, doc (showString "("), prt 0 args, doc (showString ")"), prt 0 block])
     SExp expr -> prPrec i 0 (concatD [prt 0 expr, doc (showString ";")])
   prtList _ [] = (concatD [])
   prtList _ (x:xs) = (concatD [prt 0 x, prt 0 xs])

@@ -24,9 +24,27 @@ failure x = do
 transIdent :: Ident -> Result
 transIdent x = case x of
   Ident string -> failure x -}
-transProgram :: Program -> Result ()
-transProgram x = case x of
-  Program stmts -> transStmts stmts
+transProgram :: Program -> Result Value
+transProgram (Program fundefs) = do
+  transFunDefs fundefs
+  transExpr $ EApp (EVar (Ident "main")) []
+
+transFunDefs :: [FunDef] -> Result ()
+transFunDefs [] = return ()
+transFunDefs (x : xs) = do
+  transFunDef x
+  transFunDefs xs
+
+transFunDef :: FunDef -> Result ()
+transFunDef x = case x of
+  FnDef type_ ident args blk -> do
+    argIdents <- mapM argGetIdent args
+    ref <- liftIO $ newIORef (MyInt 0)
+    modify $ \env -> Map.insert ident ref env
+    env <- get
+    fun <- newFunction env argIdents blk
+    liftIO $ writeIORef ref fun
+
 {-
 transBlock :: Block -> Result
 transBlock x = case x of
@@ -103,16 +121,10 @@ transStmt x = case x of
     liftIO $ putStrLn "uwaga teraz debuguje"
     state <- get
     liftIO $ mapM readIORef state >>= print
-  FnDef type_ ident args blk -> do
-    argIdents <- mapM argGetIdent args
-    ref <- liftIO $ newIORef (MyInt 0)
-    modify $ \env -> Map.insert ident ref env
-    env <- get
-    fun <- newFunction env argIdents blk
-    liftIO $ writeIORef ref fun
   SExp expr -> do
     transExpr expr
     return ()
+  FDef fdef -> transFunDef fdef
 
 {-
 transItem :: Item -> Result

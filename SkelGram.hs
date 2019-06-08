@@ -14,7 +14,10 @@ transIdent x = case x of
   Ident string -> failure x
 transProgram :: Program -> Result
 transProgram x = case x of
-  Program stmts -> failure x
+  Program fundefs -> failure x
+transFunDef :: FunDef -> Result
+transFunDef x = case x of
+  FnDef type_ ident args block -> failure x
 transArg :: Arg -> Result
 transArg x = case x of
   Arg type_ ident -> failure x
@@ -23,6 +26,7 @@ transBlock x = case x of
   Block stmts -> failure x
 transStmt :: Stmt -> Result
 transStmt x = case x of
+  FDef fundef -> failure x
   Empty -> failure x
   BStmt block -> failure x
   Decl type_ items -> failure x
@@ -35,7 +39,6 @@ transStmt x = case x of
   CondElse expr stmt1 stmt2 -> failure x
   While expr stmt -> failure x
   Debug -> failure x
-  FnDef type_ ident args block -> failure x
   SExp expr -> failure x
 transItem :: Item -> Result
 transItem x = case x of

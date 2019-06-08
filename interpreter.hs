@@ -24,3 +24,9 @@ main = do
         (Left msg) -> putStrLn $ "liz mi jaja: " ++ msg
         (Right state) -> putStrLn "Program zakonczony sukcesem."
     (Bad why) -> putStrLn why
+
+{-
+jezyk ma byc definicjami funkcji
+uruchamiac ma sie main!
+
+-}

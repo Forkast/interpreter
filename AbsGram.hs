@@ -8,7 +8,10 @@ module AbsGram where
 
 
 newtype Ident = Ident String deriving (Eq, Ord, Show, Read)
-data Program = Program [Stmt]
+data Program = Program [FunDef]
+  deriving (Eq, Ord, Show, Read)
+
+data FunDef = FnDef Type Ident [Arg] Block
   deriving (Eq, Ord, Show, Read)
 
 data Arg = Arg Type Ident
@@ -18,7 +21,8 @@ data Block = Block [Stmt]
   deriving (Eq, Ord, Show, Read)
 
 data Stmt
-    = Empty
+    = FDef FunDef
+    | Empty
     | BStmt Block
     | Decl Type [Item]
     | Ass Ident Expr
@@ -30,7 +34,6 @@ data Stmt
     | CondElse Expr Stmt Stmt
     | While Expr Stmt
     | Debug
-    | FnDef Type Ident [Arg] Block
     | SExp Expr
   deriving (Eq, Ord, Show, Read)
 

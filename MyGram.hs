@@ -8,13 +8,17 @@ import Data.Map as Map
 import Data.Maybe
 import Control.Monad.Trans.Except
 import Control.Monad.Except
+import Control.Monad.Cont
 import Data.IORef
 
 import AbsGram
 import ErrM
-
+data Env = Env {
+  variables :: DataEnv,
+  conti :: Value -> Result Value
+}
 type DataEnv = Map Ident (IORef Value)
-type Result a = StateT DataEnv (ExceptT String IO) a
+type Result a = StateT Env (ExceptT String (ContT (Either String Env) IO)) a
 
 failure :: Show a => a -> Result ()
 failure x = do
@@ -40,7 +44,7 @@ transFunDef x = case x of
   FnDef type_ ident args blk -> do
     argIdents <- mapM argGetIdent args
     ref <- liftIO $ newIORef (MyInt 0)
-    modify $ \env -> Map.insert ident ref env
+    modify $ \env -> env {variables = Map.insert ident ref (variables env)}
     env <- get
     fun <- newFunction env argIdents blk
     liftIO $ writeIORef ref fun
@@ -55,7 +59,7 @@ transStmts = mapM_ transStmt
 declVal :: Ident -> Value -> Result ()
 declVal i v = do
   el <- liftIO (newIORef v)
-  modify $ \env -> Map.insert i (el) env
+  modify $ \env -> env {variables = Map.insert i el (variables env)}
 
 declItem :: Type -> Item -> Result ()
 declItem t (NoInit i) = do -- TODO: domyslna wartosc
@@ -84,14 +88,17 @@ block res = do
   put old
   return co
 
-newFunction :: DataEnv -> [Ident] -> Block -> Result Value
+newFunction :: Env -> [Ident] -> Block -> Result Value
 newFunction env argsIden blk = return $ MyFunction $ \argsVal -> do
   currentState <- get
   put env
   zipWithM_ declVal argsIden argsVal
-  transStmt (BStmt blk)
+  result <- callCC $ \ret -> do
+    modify $ \env -> env {conti = ret}
+    transStmt (BStmt blk)
+    return MyVoid
   put currentState
-  return (MyInt 0)
+  return result
 
 argGetIdent :: Arg -> Result Ident
 argGetIdent (Arg t i) = return i
@@ -102,13 +109,20 @@ transStmt x = case x of
   BStmt (Block stmts) -> block $ transStmts stmts
   Decl type_ items -> mapM_ (declItem type_) items
   Ass i expr -> do
-    item <- gets $ (Map.! i)
+    item <- gets $ (Map.! i) . variables
     v <- transExpr expr
     liftIO $ writeIORef item v
   Incr ident -> failure x
   Decr ident -> failure x
-  Ret expr -> failure x
-  VRet -> failure x
+  Ret expr -> do
+    v <- transExpr expr
+    ret <- gets conti
+    ret v
+    return ()
+  VRet -> do
+    ret <- gets conti
+    ret MyVoid
+    return ()
   Cond expr stmt ->  do
     cond <- transExpr expr
     condRunStmt cond stmt
@@ -120,7 +134,7 @@ transStmt x = case x of
   Debug -> do
     liftIO $ putStrLn "uwaga teraz debuguje"
     state <- get
-    liftIO $ mapM readIORef state >>= print
+    liftIO $ mapM readIORef (variables state) >>= print
   SExp expr -> do
     transExpr expr
     return ()
@@ -148,6 +162,7 @@ data Value = MyInt Int
            | MyBool Bool
            | MyFunction Fun
            | MyLambda Type [Type] Block
+           | MyVoid
 
 data Operator = MyAdd (Value -> Value -> Value)
               | MyMul (Value -> Value -> Value)
@@ -227,7 +242,7 @@ transExpr x = case x of
   ELam type_ types block -> return $ MyLambda type_ types block
   EVar ident -> do
     state <- get
-    liftIO $ readIORef $ state Map.! ident
+    liftIO $ readIORef $ (variables state) Map.! ident
   ELitInt integer -> return $ MyInt $ fromInteger integer
   ELitTrue -> return $ MyBool True
   ELitFalse -> return $ MyBool False
@@ -236,7 +251,9 @@ transExpr x = case x of
     args <- mapM transExpr exprs
     f args
   EString string -> return $ MyStr string
---   Neg expr -> failure x
+  Neg expr -> do
+    (MyInt val) <- transExpr expr
+    return (MyInt (-val))
 --   Not expr -> failure x
 --   EAnd expr1 expr2 -> failure x
 --   EOr expr1 expr2 -> failure x

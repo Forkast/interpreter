@@ -44,7 +44,7 @@ data Type = Int | Str | Bool | Void | Ref Type | Fun Type [Type]
   deriving (Eq, Ord, Show, Read)
 
 data Expr
-    = ELam Type [Type] Block
+    = ELam Type [Arg] Block
     | EVar Ident
     | ELitInt Integer
     | ELitTrue

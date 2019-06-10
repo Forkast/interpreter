@@ -54,7 +54,7 @@ transType x = case x of
   Fun type_ types -> failure x
 transExpr :: Expr -> Result
 transExpr x = case x of
-  ELam type_ types block -> failure x
+  ELam type_ args block -> failure x
   EVar ident -> failure x
   ELitInt integer -> failure x
   ELitTrue -> failure x

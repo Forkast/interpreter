@@ -146,7 +146,6 @@ data Value = MyInt Int
            | MyStr String
            | MyBool Bool
            | MyFunction Fun
-           | MyLambda Type [Type] Block
            | MyVoid
 
 data Operator = MyAdd (Value -> Value -> Value)
@@ -224,7 +223,12 @@ transExpr (ERel expr1 relop expr2) = do
   (MyRel x) <- transRelOp relop
   return $ x v1 v2
 transExpr x = case x of
-  ELam type_ types block -> return $ MyLambda type_ types block
+--   ELam type_ types block -> return $ MyFunction type_ types block
+  ELam type_ args block -> do
+    argIdents <- mapM argGetIdent args
+    env <- get
+    fun <- newFunction env argIdents block
+    return fun
   EVar ident -> do
     state <- get
     liftIO $ readIORef $ (variables state) Map.! ident

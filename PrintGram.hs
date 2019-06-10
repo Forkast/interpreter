@@ -139,7 +139,7 @@ instance Print Type where
   prtList _ (x:xs) = (concatD [prt 0 x, doc (showString ","), prt 0 xs])
 instance Print Expr where
   prt i e = case e of
-    ELam type_ types block -> prPrec i 6 (concatD [doc (showString "lambda("), prt 0 type_, doc (showString ","), prt 0 types, doc (showString ")"), prt 0 block])
+    ELam type_ args block -> prPrec i 6 (concatD [doc (showString "lambda("), prt 0 type_, doc (showString ","), prt 0 args, doc (showString ")"), prt 0 block])
     EVar id -> prPrec i 6 (concatD [prt 0 id])
     ELitInt n -> prPrec i 6 (concatD [prt 0 n])
     ELitTrue -> prPrec i 6 (concatD [doc (showString "true")])

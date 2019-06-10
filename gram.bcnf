@@ -70,7 +70,7 @@ separator  Type "," ;
 
 -- Expressions ---------------------------------------------
 
-ELam.      Expr6 ::= "lambda(" Type "," [Type] ")" Block ;
+ELam.      Expr6 ::= "lambda(" Type "," [Arg] ")" Block ;
 
 EVar.      Expr6 ::= Ident ;
 

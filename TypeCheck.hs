@@ -53,6 +53,7 @@ checkFunDef x = case x of
     modify $ \env -> env {vTypes = Map.insert ident (MyFunction t argTypes) (vTypes env)}
     env <- get
     fun <- checkFunction env argIdents argTypes blk
+    liftIO $ putStrLn $ "Type " ++ (show fun) ++ " * * " ++ (show t)
     checkError (fun == t) ("Return value does not match function type. " ++ name)
     return $ fun
 
@@ -95,6 +96,8 @@ block res = do
   put old
   return co
 
+  -- chce odstawiac tylko stan
+  -- to samo w blocku
 checkFunction :: TEnv -> [Ident] -> [TypeValue] -> Block -> Result TypeValue
 checkFunction env argsIden argsTypes blk = do
   currentState <- get
@@ -127,7 +130,7 @@ checkIntType e msg = do
 checkStmt :: Stmt -> Result ()
 checkStmt x = case x of
   Empty -> return ()
-  BStmt (Block stmts) -> checkStmts stmts
+  BStmt (Block stmts) -> block $ checkStmts stmts
   Decl type_ items -> mapM_ (declItem (getType type_)) items
   Ass i@(Ident name) expr -> do
     mType <- gets $ (Map.lookup i) . vTypes
@@ -194,9 +197,13 @@ checkExpr (ERel expr1 _ expr2) = do
   checkError (v1 == v2) "Cannot compare variables of different type."
   return MyBool
 checkExpr x = case x of
-  ELam type_ types block -> do
-    checkStmt (BStmt block)
-    return $ MyFunction (getType type_) (fmap getType types)
+  ELam type_ args block -> do
+    argIdents <- mapM argGetIdent args
+    argTypes <- mapM argGetType args
+    t <- return $ getType type_
+    env <- get
+    fun <- checkFunction env argIdents argTypes block
+    return fun
   EVar ident@(Ident name) -> do
     state <- gets vTypes
     mtype <- return $ Map.lookup ident state

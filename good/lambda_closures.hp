@@ -1,0 +1,35 @@
+(int, int) add(int x)
+{
+	return lambda(int, int y) { return x + y;};
+}
+
+(int, int) makeCounter()
+{
+	int counter = 0;
+	int c(int x)
+	{
+		counter = counter + x;
+		return counter;
+	}
+	return c;
+}
+
+int main()
+{
+	(int, int) counter = makeCounter();
+	int aa = counter(1);
+	int ab = counter(1);
+	int ac = counter(1);
+
+	(int, int) test = add(5);
+	int y = test(100);
+	
+	int pomocnicza(int x)
+	{
+		x = 10;
+		return x;
+	}
+	pomocnicza(1);
+	return 2;
+}
+

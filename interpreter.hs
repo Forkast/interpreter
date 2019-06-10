@@ -27,14 +27,14 @@ main = do
       }
       tcError <- runExceptT (execStateT (checkProgram tree) (emptyTEnv))
       case tcError of
-        (Left msg) -> putStrLn $ "liz mi jaja: " ++ msg
+        (Left msg) -> putStrLn $ "TypeChecker Error: " ++ msg
         (Right state) -> do
           let emptyEnv = Env {
             variables = fromList [],
             conti = \_ -> throwError "Unreachable continuation."}
           error <- runContT (runExceptT (execStateT (transProgram tree) (emptyEnv))) return
           case error of
-            (Left msg) -> putStrLn $ "liz mi jaja: " ++ msg
+            (Left msg) -> putStrLn $ "Runtime Error: " ++ msg
             (Right state) -> putStrLn "Program zakonczony sukcesem."
     (Bad why) -> putStrLn why
 

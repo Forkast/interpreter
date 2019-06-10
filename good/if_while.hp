@@ -1,0 +1,19 @@
+int main()
+{
+	int x = 5;
+	if (x + 1 == 6) {
+		print("if");
+	} else {
+		print("else");
+	}
+	if ((x + 1) - 2 == 7) {
+		print("if");
+	} else {
+		print("else");
+	}
+	while (x < 10) {
+		x++;
+		print("while");
+	}
+	return 0;
+}

@@ -1,0 +1,14 @@
+int pomocnicza((int, int) x, int y)
+{
+	return x(y);
+}
+
+int main()
+{
+	(int, int) fun5 = lambda(int, int w) {
+		return w + 5;
+	};
+	pomocnicza(fun5, 13);
+	print(10, 11, false, fun5, "text");
+	return 1;
+}

@@ -55,7 +55,7 @@ checkFunDef x = case x of
     modify $ \env -> env {vTypes = Map.insert ident (MyFunction t argTypes) (vTypes env)}
     env <- gets vTypes
     fun <- checkFunction env argIdents argTypes blk
-    checkError (fun == t) ("Return value does not match function type. " ++ name)
+    checkError (fun == t) ("Return value does not match function type. In function: " ++ name ++ ".")
     return $ fun
 
 checkStmts :: [Stmt] -> Result ()
@@ -124,6 +124,7 @@ getType Int = MyInt
 getType Str = MyStr
 getType Bool = MyBool
 getType (Fun a b) = MyFunction (getType a) (fmap getType b)
+getType Void = MyVoid
 
 checkIntType :: Expr -> String -> Result ()
 checkIntType e msg = do
@@ -140,7 +141,7 @@ checkStmt x = case x of
     t <- checkExpr expr
     case mType of
          (Nothing) -> throwError ("Variable " ++ name ++ " not declared")
-         (Just iType) -> checkError (t == iType) "Wrong types"
+         (Just iType) -> checkError (t == iType) ("Assigning " ++ (show t) ++ " to variable '" ++ name ++ "', which is of type " ++ show(iType) ++ ".")
   Incr ident -> do
     t <- checkExpr (EVar ident)
     checkError (t == MyInt) "Incrementing is possible only with int."

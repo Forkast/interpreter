@@ -1,0 +1,14 @@
+void pom(int x)
+{
+	print("pom", x);
+	if (x == 10)
+		return;
+	pom(x + 1);
+}
+
+int main()
+{
+	int x = 1;
+	pom(x);
+	return 0;
+}

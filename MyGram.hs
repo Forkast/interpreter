@@ -102,8 +102,11 @@ condElseRunStmt (MyBool False) _ stmt2 = transStmt stmt2
 whileRunStmt :: Expr -> Stmt -> Result ()
 whileRunStmt expr stmt = do
   cond <- transExpr expr
-  condRunStmt cond stmt
-  whileRunStmt expr stmt
+  case cond of
+    (MyBool True) -> do
+      condRunStmt cond stmt
+      whileRunStmt expr stmt
+    (MyBool False) -> return ()
 
 block :: Result x -> Result x
 block res = do
@@ -136,8 +139,16 @@ transStmt x = case x of
     item <- gets $ (Map.! i) . variables
     v <- transExpr expr
     liftIO $ writeIORef item v
-  Incr ident -> failure x
-  Decr ident -> failure x
+  Incr i -> do
+    ref <- gets $ (Map.! i) . variables
+    (MyInt v) <- liftIO $ readIORef ref
+    liftIO $ writeIORef ref (MyInt (v + 1))
+    return ()
+  Decr i -> do
+    ref <- gets $ (Map.! i) . variables
+    (MyInt v) <- liftIO $ readIORef ref
+    liftIO $ writeIORef ref (MyInt (v - 1))
+    return ()
   Ret expr -> do
     v <- transExpr expr
     ret <- gets conti
@@ -224,7 +235,7 @@ transExpr (EMul expr1 mulop expr2) = do
     _ -> do
       (MyMul x) <- transMulOp mulop
       if x2 == 0 then
-        throwError "Dividing by zero is a very bad idea!"
+        throwError "Dividing by zero."
       else
         return $ x v1 v2
 transExpr (ERel expr1 relop expr2) = do

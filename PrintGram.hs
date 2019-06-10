@@ -132,7 +132,6 @@ instance Print Type where
     Str -> prPrec i 0 (concatD [doc (showString "string")])
     Bool -> prPrec i 0 (concatD [doc (showString "bool")])
     Void -> prPrec i 0 (concatD [doc (showString "void")])
-    Ref type_ -> prPrec i 0 (concatD [prt 0 type_, doc (showString "&")])
     Fun type_ types -> prPrec i 0 (concatD [doc (showString "("), prt 0 type_, doc (showString ","), prt 0 types, doc (showString ")")])
   prtList _ [] = (concatD [])
   prtList _ [x] = (concatD [prt 0 x])

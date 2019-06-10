@@ -69,13 +69,13 @@ declType i t = do
 declItem :: TypeValue -> Item -> Result ()
 declItem t (NoInit i) = do
   declType i t
-declItem t (Init i@(Ident name) e) = do -- TODO: ponowna deklaracja
+declItem t (Init i@(Ident name) e) = do
   v <- checkExpr e
   env <- get
   res <- return $ Map.lookup i (vTypes env)
   case res of
     (Nothing) -> declType i t
-    (Just a) -> checkError (a == t) ("Ponowna deklaracja zmiennej " ++ name ++ " z innym typem.")
+    (Just a) -> throwError ("Redeclaration of variable " ++ name)
 
 checkIfStmt :: Expr -> Stmt -> Result ()
 checkIfStmt expr stmt1 = checkElseStmt expr stmt1 Empty
@@ -209,7 +209,7 @@ checkExpr x = case x of
     state <- gets vTypes
     mtype <- return $ Map.lookup ident state
     case mtype of
-         Nothing -> throwError ("Using undeclared variable " ++ name)
+         Nothing -> throwError ("Using undeclared variable '" ++ name ++ "'.")
          (Just t) -> return t
   ELitInt integer -> return $ MyInt
   ELitTrue -> return $ MyBool
@@ -259,7 +259,7 @@ checkAddOp Minus _ _ = throwError "JEBUDU"
 
 checkAddOp x v1 v2 = case x of
   Plus -> do
-    checkError (v1 == v2) "Dodawac mozna tylko te same typy"
+    checkError (v1 == v2) "Addition allowed only between the same types."
     return v1
 
 checkError :: Bool -> String -> Result ()

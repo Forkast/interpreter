@@ -1,0 +1,9 @@
+void pom(int x)
+{
+	print(x);
+}
+
+void main()
+{
+	pom(1, 2);
+}

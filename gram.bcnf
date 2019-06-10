@@ -62,8 +62,6 @@ Bool.      Type ::= "bool" ;
 
 Void.      Type ::= "void" ;
 
-Ref.       Type ::= Type "&" ;
-
 Fun.       Type ::= "(" Type "," [Type] ")" ;
 
 separator  Type "," ;

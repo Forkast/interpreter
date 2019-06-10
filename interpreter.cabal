@@ -7,12 +7,12 @@ version:             0.1.0.0
 -- description:         
 license:             GPL-3
 license-file:        LICENSE
-author:              hp345395
+author:              Hubert Pełczyński
 maintainer:          h.pelczynski@student.uw.edu.pl
 -- copyright:           
 category:            Language
 build-type:          Simple
-extra-source-files:  ChangeLog.md, readme
+extra-source-files:  readme
 cabal-version:       >=1.10
 
 executable interpreter

@@ -65,7 +65,7 @@ transFunDef :: FunDef -> Result ()
 transFunDef x = case x of
   FnDef type_ ident args blk -> do
     argIdents <- mapM argGetIdent args
-    ref <- liftIO $ newIORef (MyInt 0)
+    ref <- liftIO $ newIORef (defaultValue type_)
     modify $ \env -> env {variables = Map.insert ident ref (variables env)}
     env <- get
     fun <- newFunction env argIdents blk
@@ -244,7 +244,6 @@ transExpr (ERel expr1 relop expr2) = do
   (MyRel x) <- transRelOp relop
   return $ x v1 v2
 transExpr x = case x of
---   ELam type_ types block -> return $ MyFunction type_ types block
   ELam type_ args block -> do
     argIdents <- mapM argGetIdent args
     env <- get
@@ -275,7 +274,6 @@ transExpr x = case x of
     (MyBool b1) <- transExpr expr1
     (MyBool b2) <- transExpr expr2
     return (MyBool (b1 || b2))
-    
 
 transAddOp :: AddOp -> Result Operator
 transAddOp x = case x of

@@ -97,8 +97,6 @@ block res = do
   modify $ \e -> e {vTypes = old}
   return co
 
-  -- chce odstawiac tylko stan
-  -- to samo w blocku
 checkFunction :: TypeEnv -> [Ident] -> [TypeValue] -> Block -> Result TypeValue
 checkFunction env argsIden argsTypes blk = do
   currentState <- gets vTypes

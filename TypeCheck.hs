@@ -25,7 +25,8 @@ data TypeValue = MyInt
                | MyStr
                | MyBool
                | MyFunction TypeValue [TypeValue]
-               | MyVoid deriving (Eq)
+               | MyVoid
+               | MyAny deriving (Eq)
 
 failure :: Show a => a -> Result ()
 failure x = do
@@ -33,6 +34,7 @@ failure x = do
 
 checkProgram :: Program -> Result ()
 checkProgram (Program fundefs) = do
+  modify $ \env -> env {vTypes = Map.insert (Ident "print") (MyFunction MyVoid [MyAny]) (vTypes env)}
   checkFunDefs fundefs
 
 checkFunDefs :: [FunDef] -> Result ()
@@ -214,10 +216,20 @@ checkExpr x = case x of
   ELitTrue -> return $ MyBool
   ELitFalse -> return $ MyBool
   EApp ident exprs -> do
-    (MyFunction t argT) <- checkExpr ident
+    fun <- checkExpr ident
     args <- mapM checkExpr exprs
-    checkError (argT == args) "Error with argument types."
-    return t
+    case fun of
+      (MyFunction t argT@(h:r)) ->
+        case h of
+          MyAny -> return t
+          _ -> do
+            checkError (argT == args) "Error with argument types."
+            return t
+      (MyFunction t []) -> do
+        checkError (args == []) "Wrong arguments."
+        return t
+      _ -> throwError "Application function error."
+        
   EString string -> return $ MyStr
   Neg expr -> do
     msg <- return "Cannot negate type other than int."

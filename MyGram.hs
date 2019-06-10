@@ -22,12 +22,36 @@ data Env = Env {
 type DataEnv = Map Ident (IORef Value)
 type Result a = StateT Env (ExceptT String (ContT (Either String Env) IO)) a
 
+type Fun = [Value] -> Result Value
+
+data Value = MyInt Int
+           | MyStr String
+           | MyBool Bool
+           | MyFunction Fun
+           | MyVoid
+
+instance Show Value where
+  show (MyInt x) = show x
+  show (MyStr x) = x
+  show (MyBool x) = show x
+  show (MyFunction x) = "function_type"
+  show MyVoid = "void"
+
 failure :: Show a => a -> Result ()
 failure x = do
   liftIO $ putStrLn $ show x
 
+myPrint :: [Value] -> Result Value
+myPrint x = do
+  w <- return $ fmap show x
+  p <- return $ unwords w
+  liftIO $ putStrLn p
+  return MyVoid
+
 transProgram :: Program -> Result Value
 transProgram (Program fundefs) = do
+  ref <- liftIO $ newIORef (MyFunction myPrint)
+  modify $ \env -> env {variables = Map.insert (Ident "print") ref (variables env)}
   transFunDefs fundefs
   transExpr $ EApp (EVar (Ident "main")) []
 
@@ -140,23 +164,9 @@ transStmt x = case x of
     return ()
   FDef fdef -> transFunDef fdef
 
-type Fun = [Value] -> Result Value
-
-data Value = MyInt Int
-           | MyStr String
-           | MyBool Bool
-           | MyFunction Fun
-           | MyVoid
-
 data Operator = MyAdd (Value -> Value -> Value)
               | MyMul (Value -> Value -> Value)
               | MyRel (Value -> Value -> Value)
-
-instance Show Value where
-  show (MyInt x) = show x
-  show (MyStr x) = x
-  show (MyBool x) = show x
-  show (MyFunction x) = show "function"
 
 myAdd :: Value -> Value -> Value
 myAdd (MyInt x) (MyInt y) = MyInt (x + y)

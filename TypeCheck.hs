@@ -120,22 +120,10 @@ getType Str = MyStr
 getType Bool = MyBool
 getType (Fun a b) = MyFunction (getType a) (fmap getType b)
 
-
 checkIntType :: Expr -> String -> Result ()
 checkIntType e msg = do
   t <- checkExpr e
   checkError (t == MyInt) msg
---   case checkExpr e of
---        MyInt -> return ()
---        _ -> "JUB"
-  
--- checkIntType :: Ident -> Result ()
--- checkIntType ident = do
---     iType <- gets $ (Map.! ident)
---     case iType of
---          MyInt -> return ()
---          _ -> throwError "Nie mozna wykonywac operacji arytmetycznych na innych typach niż int."
-  
 
 checkStmt :: Stmt -> Result ()
 checkStmt x = case x of
@@ -206,10 +194,10 @@ checkExpr (ERel expr1 _ expr2) = do
   v2 <- checkExpr expr2
   checkError (v1 == v2) "Cannot compare variables of different type."
   return MyBool
-checkExpr x = case x of --TODO sprawdzic block
+checkExpr x = case x of
   ELam type_ types block -> do
     checkStmt (BStmt block)
-    return $ MyLambda (getType type_) (fmap getType types) --block
+    return $ MyLambda (getType type_) (fmap getType types)
   EVar ident@(Ident name) -> do
     state <- gets vTypes
     mtype <- return $ Map.lookup ident state

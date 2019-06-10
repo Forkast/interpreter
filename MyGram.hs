@@ -63,10 +63,16 @@ declVal i v = do
 
 declItem :: Type -> Item -> Result ()
 declItem t (NoInit i) = do -- TODO: domyslna wartosc
-  declVal i (MyInt 0)
+  declVal i (defaultValue t)
 declItem _ (Init i e) = do
   v <- transExpr e
   declVal i v
+
+defaultValue :: Type -> Value
+defaultValue Int = MyInt 0
+defaultValue Str = MyStr ""
+defaultValue Bool = MyBool False
+defaultValue Void = MyVoid
 
 condRunStmt :: Value -> Stmt -> Result ()
 condRunStmt exp stmt1 = condElseRunStmt exp stmt1 Empty

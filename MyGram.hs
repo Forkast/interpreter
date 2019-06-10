@@ -24,10 +24,6 @@ failure :: Show a => a -> Result ()
 failure x = do
   liftIO $ putStrLn $ show x
 
-{-
-transIdent :: Ident -> Result
-transIdent x = case x of
-  Ident string -> failure x -}
 transProgram :: Program -> Result Value
 transProgram (Program fundefs) = do
   transFunDefs fundefs
@@ -49,10 +45,6 @@ transFunDef x = case x of
     fun <- newFunction env argIdents blk
     liftIO $ writeIORef ref fun
 
-{-
-transBlock :: Block -> Result
-transBlock x = case x of
-Block stmts -> failure x-}
 transStmts :: [Stmt] -> Result ()
 transStmts = mapM_ transStmt
 
@@ -62,7 +54,7 @@ declVal i v = do
   modify $ \env -> env {variables = Map.insert i el (variables env)}
 
 declItem :: Type -> Item -> Result ()
-declItem t (NoInit i) = do -- TODO: domyslna wartosc
+declItem t (NoInit i) = do
   declVal i (defaultValue t)
 declItem _ (Init i e) = do
   v <- transExpr e
@@ -260,10 +252,17 @@ transExpr x = case x of
   Neg expr -> do
     (MyInt val) <- transExpr expr
     return (MyInt (-val))
---   Not expr -> failure x
---   EAnd expr1 expr2 -> failure x
---   EOr expr1 expr2 -> failure x
--- transExpr (EAdd (ELitInt x) addop exp1) = transExpr 
+  Not expr -> do
+    (MyBool b) <- transExpr expr
+    return (MyBool (not b))
+  EAnd expr1 expr2 -> do
+    b1 <- transExpr expr1
+    b2 <- transExpr expr2
+    return (MyBool (b1 && b2 ))
+  EOr expr1 expr2 ->  do
+    b1 <- transExpr expr1
+    b2 <- transExpr expr2
+    return (MyBool (b1 || b2 ))
     
 
 transAddOp :: AddOp -> Result Operator

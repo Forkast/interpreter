@@ -51,9 +51,8 @@ checkFunDef x = case x of
     argTypes <- mapM argGetType args
     t <- return $ getType type_
     modify $ \env -> env {vTypes = Map.insert ident (MyFunction t argTypes) (vTypes env)}
-    env <- get
+    env <- gets vTypes
     fun <- checkFunction env argIdents argTypes blk
-    liftIO $ putStrLn $ "Type " ++ (show fun) ++ " * * " ++ (show t)
     checkError (fun == t) ("Return value does not match function type. " ++ name)
     return $ fun
 
@@ -91,26 +90,28 @@ checkWhileStmt expr stmt = checkIfStmt expr stmt
 
 block :: Result x -> Result x
 block res = do
-  old <- get
+  old <- gets vTypes
   co <- res
-  put old
+  modify $ \e -> e {vTypes = old}
   return co
 
   -- chce odstawiac tylko stan
   -- to samo w blocku
-checkFunction :: TEnv -> [Ident] -> [TypeValue] -> Block -> Result TypeValue
+checkFunction :: TypeEnv -> [Ident] -> [TypeValue] -> Block -> Result TypeValue
 checkFunction env argsIden argsTypes blk = do
-  currentState <- get
-  put env
+  currentState <- gets vTypes
+  modify $ \e -> e {vTypes = env}
+  retType <- gets rVal
+  modify $ \e -> e {rVal = Nothing}
   zipWithM_ declType argsIden argsTypes
   checkStmt (BStmt blk)
-  retType <- gets rVal
-  case retType of
+  newRType <- gets rVal
+  modify $ \e -> e {vTypes = currentState}
+  modify $ \e -> e {rVal = retType}
+  case newRType of
     (Nothing) -> do
-      put currentState
       return MyVoid
     (Just a) -> do
-      put currentState
       return a
 
 argGetType :: Arg -> Result TypeValue
@@ -170,9 +171,7 @@ checkReturn t = do
         modify $ \env -> env {rVal = (Just t)}
         newt <- gets rVal
         return ()
-      (Just a) -> do
-        liftIO $ putStrLn $ (show t ) ++ " " ++ (show a)
-        checkError (a == t) "Return type does not match previous return statement."
+      (Just a) -> return ()
 
 instance Show TypeValue where
   show MyInt = "int"
@@ -201,9 +200,10 @@ checkExpr x = case x of
     argIdents <- mapM argGetIdent args
     argTypes <- mapM argGetType args
     t <- return $ getType type_
-    env <- get
+    env <- gets vTypes
     fun <- checkFunction env argIdents argTypes block
-    return fun
+    checkError (t == fun) "Lambda return type does not match declaration."
+    return (MyFunction t argTypes)
   EVar ident@(Ident name) -> do
     state <- gets vTypes
     mtype <- return $ Map.lookup ident state

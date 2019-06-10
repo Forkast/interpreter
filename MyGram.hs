@@ -13,10 +13,12 @@ import Data.IORef
 
 import AbsGram
 import ErrM
+
 data Env = Env {
   variables :: DataEnv,
   conti :: Value -> Result Value
 }
+
 type DataEnv = Map Ident (IORef Value)
 type Result a = StateT Env (ExceptT String (ContT (Either String Env) IO)) a
 
@@ -138,21 +140,6 @@ transStmt x = case x of
     return ()
   FDef fdef -> transFunDef fdef
 
-{-
-transItem :: Item -> Result
-transItem x = case x of
-  NoInit ident -> failure x
-  Init ident expr -> failure x
-transType :: Type -> Result
-transType x = case x of
-  Int -> failure x
-  Str -> failure x
-  Bool -> failure x
-  Void -> failure x
-  Ref type_ -> failure x
-  Fun type_ types -> failure x
--}
-
 type Fun = [Value] -> Result Value
 
 data Value = MyInt Int
@@ -170,7 +157,7 @@ instance Show Value where
   show (MyInt x) = show x
   show (MyStr x) = x
   show (MyBool x) = show x
-  show (MyFunction x) = show "funkcja"
+  show (MyFunction x) = show "function"
 
 myAdd :: Value -> Value -> Value
 myAdd (MyInt x) (MyInt y) = MyInt (x + y)
@@ -228,7 +215,7 @@ transExpr (EMul expr1 mulop expr2) = do
     _ -> do
       (MyMul x) <- transMulOp mulop
       if x2 == 0 then
-        throwError "dzielisz przez zero! debilu."
+        throwError "Dividing by zero is a very bad idea!"
       else
         return $ x v1 v2
 transExpr (ERel expr1 relop expr2) = do
@@ -256,13 +243,13 @@ transExpr x = case x of
     (MyBool b) <- transExpr expr
     return (MyBool (not b))
   EAnd expr1 expr2 -> do
-    b1 <- transExpr expr1
-    b2 <- transExpr expr2
-    return (MyBool (b1 && b2 ))
+    (MyBool b1) <- transExpr expr1
+    (MyBool b2) <- transExpr expr2
+    return (MyBool (b1 && b2))
   EOr expr1 expr2 ->  do
-    b1 <- transExpr expr1
-    b2 <- transExpr expr2
-    return (MyBool (b1 || b2 ))
+    (MyBool b1) <- transExpr expr1
+    (MyBool b2) <- transExpr expr2
+    return (MyBool (b1 || b2))
     
 
 transAddOp :: AddOp -> Result Operator

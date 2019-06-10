@@ -25,7 +25,6 @@ data TypeValue = MyInt
                | MyStr
                | MyBool
                | MyFunction TypeValue [TypeValue]
-               | MyLambda TypeValue [TypeValue]
                | MyVoid deriving (Eq)
 
 failure :: Show a => a -> Result ()
@@ -197,7 +196,7 @@ checkExpr (ERel expr1 _ expr2) = do
 checkExpr x = case x of
   ELam type_ types block -> do
     checkStmt (BStmt block)
-    return $ MyLambda (getType type_) (fmap getType types)
+    return $ MyFunction (getType type_) (fmap getType types)
   EVar ident@(Ident name) -> do
     state <- gets vTypes
     mtype <- return $ Map.lookup ident state

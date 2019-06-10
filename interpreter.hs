@@ -21,13 +21,17 @@ main = do
   input <- hGetContents file
   case (pProgram (myLexer input)) of
     (Ok tree) -> do
-      tcError <- runExceptT (execStateT (checkProgram tree) (fromList []))
+      let emptyTEnv = TEnv {
+        vTypes = fromList [],
+        rVal = Nothing
+      }
+      tcError <- runExceptT (execStateT (checkProgram tree) (emptyTEnv))
       case tcError of
         (Left msg) -> putStrLn $ "liz mi jaja: " ++ msg
         (Right state) -> do
           let emptyEnv = Env {
             variables = fromList [],
-            conti = \_ -> throwError "Unrechable continuation."}
+            conti = \_ -> throwError "Unreachable continuation."}
           error <- runContT (runExceptT (execStateT (transProgram tree) (emptyEnv))) return
           case error of
             (Left msg) -> putStrLn $ "liz mi jaja: " ++ msg

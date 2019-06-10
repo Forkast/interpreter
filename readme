@@ -1,0 +1,20 @@
+Spełnione funkcjonalności:
+
+Co najmniej trzy typy wartości: int, bool i string
+Zmienne, operacja przypisania.
+Wyrażenia z arytmetyką + - * / ( ).
+Porównania (dopuszczalne tylko w warunkach lub z interpretacją liczbową 0/1 jak w C).
+Funkcje lub procedury z parametrami przez wartość, rekurencja.
+Literały, arytmetyka, porównania.
+Jawne wypisywanie wartości na wyjście (instrukcja lub wbudowana procedura print).
+while, if (z else i bez, może być też składnia if _ elif _ else _ endif).
+Funkcje lub procedury (bez zagnieżdżania), rekurencja.
+Co najmniej dwa sposoby przekazywania parametrów (przez zmienną / przez wartość / in/out)
+Przesłanianie identyfikatorów ze statycznym ich wiązaniem (zmienne lokalne i globalne lub zagnieżdżone procedury/funkcje).
+Obsługa błędów wykonania, np. dzielenie przez zero (może być elegancki komunikat i zatrzymanie interpretera).
+Funkcje przyjmujące i zwracające wartość dowolnych obsługiwanych typów (tzn. nie tylko procedury; za to mogą być tylko funkcje – jak w języku C).
+statyczne typowanie (tj. zawsze terminująca faza kontroli typów przed rozpoczęciem wykonania programu)
+dowolnie zagnieżdżone definicje funkcji / procedur z zachowaniem poprawności statycznego wiązania identyfikatorów (jak w Pascalu)
+funkcje jako parametry,
+domknięcia à la JavaScript.
+funkcje anonimowe
